@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  confluence:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: confluence
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      - CONFLUENCE_DB_HOST=db
+      - CONFLUENCE_DB_PORT=5432
+      - CATALINA_OPTS=-Xms256m -Xmx1g
+      - CONFLUENCE_CONFIG_PROPERTY1=hibernate.connection.driver_class
+      - CONFLUENCE_CONFIG_VALUE1=org.postgresql.Driver
+      - CONFLUENCE_CONFIG_PROPERTY2=hibernate.connection.password
+      - CONFLUENCE_CONFIG_VALUE2=jellyfish
+      - CONFLUENCE_CONFIG_PROPERTY3=hibernate.connection.url
+      - CONFLUENCE_CONFIG_VALUE3=jdbc:postgresql://db/confluencedb
+      - CONFLUENCE_CONFIG_PROPERTY4=hibernate.connection.username
+      - CONFLUENCE_CONFIG_VALUE4=confluencedb
+    networks:
+      - confluence-net
+    ports:
+      - "8090:8090"
+    volumes:
+      - confluence-vol:/var/atlassian/confluence
+
+  db:
+    image: postgres
+    container_name: postgres
+    restart: unless-stopped
+    networks:
+      - confluence-net
+    volumes:
+      - postgresql-vol:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=conf_user
+      - POSTGRES_PASSWORD=verystrongpassword
+      - POSTGRES_DB=conf_db
+
+networks:
+  confluence-net: {}
+volumes:
+  confluence-vol: {}
+  postgresql-vol: {}
